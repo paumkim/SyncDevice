@@ -1,1 +1,13 @@
+# --- SyncDevice Specific Exclusions ---
+# Ignore the local engine processing folders
+autoSyncEngine/temp/
+autoSyncEngine/logs/
 
+# --- General Windows Junk ---
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- Backup Files ---
+autoSyncEngine/config/SyncDevice_Master_v*.bat
