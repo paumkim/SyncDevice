@@ -1,65 +1,47 @@
-# SyncDevice: Ironclad Two-Way ADB Sync for Windows & Android
+# SyncDevice: Fast & Easy File Sync for PC and Android
 
-SyncDevice is an ultra-fast, highly resilient, two-way synchronization engine built entirely using Windows Batch and PowerShell. It leverages the Android Debug Bridge (ADB) to bypass the notoriously buggy Windows MTP file transfer system, allowing for massive, reliable file mirrors between your PC and your phone.
+SyncDevice is a tool that makes copying files between your Windows PC and your Android phone fast and reliable. 
 
-**⚠️ IMPORTANT DISCLAIMER:** This engine was specifically engineered for, and heavily tested on, **Samsung Galaxy devices running OneUI**. While it uses standard ADB commands and should work on any Android device, the specific "Storage Permission Audits" and connection handshake timings were optimized to bypass Samsung's specific USB security locks. 
+If you've ever been frustrated by Windows freezing or crashing when you plug in your phone to transfer photos or music, this tool fixes that. It uses a secure developer connection (ADB) to bypass those common Windows bugs so your transfers actually finish.
 
----
-
-## ✨ Key Features
-* **Two-Way In-Memory Matrix:** Scans and compares local and mobile directories using .NET processing arrays. It executes directly in system memory, completely bypassing strict Windows PowerShell Execution Policies.
-* **The Deep Harvester:** Automatically sweeps loose files (Images, Videos, Documents) from your PC dropzone and your Phone's Camera Roll, and neatly organizes them into `YYYY-MM` date folders before syncing.
-* **Category Triage Routing:** Synchronizes files systematically by category (Images first, then Videos, then Documents) so you get immediate access to priority files.
-* **Workspace Architect:** Automatically builds a clean, hidden directory structure at the system root `C:\SyncDevice` and applies custom UI icons.
-* **The Ironclad Bridge:** Features a brute-force `netstat` and PID-hunting protocol to instantly resolve Port 5037 collisions with other background Android emulators.
-* **Safety Circuit Breaker:** Automatically halts the entire sync if 3 consecutive ADB transfers fail, preventing data corruption if the USB cable is bumped or disconnected.
-* **Watchdog Sentinel:** A continuous 10-second loop that automatically detects when your phone is plugged in, syncs, and goes back to sleep when unplugged.
+**⚠️ Good to know:** This was built and tested heavily on Samsung phones, but it will work perfectly on any Android device!
 
 ---
 
-## 🛠️ Prerequisites
-1. **Windows 10 or 11** (PowerShell is built-in).
-2. **ADB (Android Platform-Tools):** You must have ADB installed and added to your Windows system `PATH`.
-3. **Developer Options:** Enabled on your Android phone.
-4. **USB Debugging:** Enabled in your phone's Developer settings.
+## ✨ What It Does
+* **Smart Syncing:** It quickly looks at your phone and your PC, figures out what files are missing, and copies only what is needed.
+* **Auto-Organizer:** It automatically grabs your messy, loose photos or documents and puts them into neat folders sorted by the year and month.
+* **Priority Transfer:** It makes sure your pictures are moved first, then your videos, and then your documents.
+* **Easy Setup:** Just run it once, and it will build a clean `C:\SyncDevice` folder on your computer with custom icons, ready to use.
+* **Fixes Bad Connections:** If another app on your computer is blocking your phone from connecting, SyncDevice forces the connection open automatically.
+* **Safe to Unplug:** If you accidentally pull the USB cable out while it's copying, it safely stops without breaking or corrupting your files.
+* **Background Watcher:** It can run quietly in the background. The moment you plug your phone in, it syncs your files and goes back to sleep.
 
 ---
 
-## 🚀 Installation & Setup
-1. Download the latest release or clone this repository.
-2. Extract the folder to your preferred location (the script will automatically anchor data to `C:\SyncDevice`).
-3. **Add your Icons (Recommended):** See the *Customizing Icons* section below.
-4. Double-click `SyncDevice.bat` to begin the Workspace Architect setup.
-5. The script will automatically clean up your desktop and generate two shortcuts:
-   * **SyncDevice:** Opens your `C:\SyncDevice` dropzone folder.
-   * **Start AutoSync Engine:** A manual trigger inside the folder to restart the daemon if closed.
+## 🛠️ What You Need First
+1. **Windows 10 or 11**.
+2. **ADB Installed:** You need to have Android Platform-Tools (ADB) installed on your computer.
+3. **USB Debugging:** You must turn on "Developer Options" and enable "USB Debugging" in your phone's settings.
 
 ---
 
-## 🎨 Customizing Folder Icons
-To keep the repository lightweight and respect licensing, original icons are not included. You can easily apply your own visual style:
-
-1. Place your `.ico` files in the `ICO/` folder within the script directory.
-2. **Naming Convention:** Files must be named exactly as follows for the script to detect them:
-   * `icon.ico` (For the main SyncDevice root and shortcuts)
-   * `Document.ico`
-   * `Download.ico`
-   * `Image.ico`
-   * `Music.ico`
-   * `Video.ico`
-3. Run the script. The **Workspace Architect** will automatically apply these icons using the hidden `.assets` protocol.
+## 🚀 How to Use It
+1. Download this project to your computer.
+2. Put your custom icons in the `ICO` folder (optional).
+3. Double-click `SyncDevice.bat`.
+4. The script will set everything up and put two shortcuts on your desktop:
+   * **SyncDevice:** Opens your main folder where you drop files you want to send to your phone.
+   * **Start AutoSync Engine:** Runs the sync tool manually whenever you want.
 
 ---
 
 ## 📱 Troubleshooting (Samsung Users)
-If the script reports that **Android Storage is LOCKED** even after you have tapped "Allow" on the phone:
-1. Ensure your USB mode is set to **"File Transfer / Android Auto"**.
-2. If the warning persists, press **[B]** in the terminal to **Bypass** the audit and force the bridge open.
+If the black screen says **Android Storage is LOCKED** even after you tapped "Allow" on your phone:
+1. Make sure your phone's USB connection is set to **"File Transfer"**.
+2. If it still says locked, press **[B]** on your keyboard to force the script to skip the check and connect anyway.
 
 ---
 
-## 🛠️ Credits & Vibe Coding
-This project is the result of a **"vibe coding"** collaboration between the user and **Google Gemini**. All core logic, ADB bridge handling, and PowerShell fusion arrays were generated through iterative AI collaboration to solve real-world MTP transfer frustrations.
-
 ## 📄 License
-Distributed under the MIT License. Feel free to fork and adapt for other Android variants.
+Free to use, share, and change (MIT License).
