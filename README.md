@@ -62,4 +62,4 @@ If the script reports that **Android Storage is LOCKED** even after you have tap
 This project is the result of a **"vibe coding"** collaboration between the user and **Google Gemini**. All core logic, ADB bridge handling, and PowerShell fusion arrays were generated through iterative AI collaboration to solve real-world MTP transfer frustrations.
 
 ## 📄 License
-Distributed under the MIT License. Feel free to fork and adapt for other Android variants (Pixel, OnePlus, etc.).
+Distributed under the MIT License. Feel free to fork and adapt for other Android variants.
