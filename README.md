@@ -7,12 +7,13 @@ SyncDevice is an ultra-fast, highly resilient, two-way synchronization engine bu
 ---
 
 ## ✨ Key Features
-* **Two-Way PowerShell Fusion Engine:** Scans and compares local and mobile directories in seconds using .NET processing arrays to calculate diffs instantly.
-* **Workspace Architect:** Automatically builds a clean directory structure (`Document`, `Download`, `Image`, `Music`, `Video`) at the system root `C:\SyncDevice` and applies custom icons.
-* **AutoWatcher Sentinel:** Generates a lightweight, minimized background daemon that monitors your USB ports and triggers a sync the moment your phone is plugged in and unlocked.
-* **The Ironclad Bridge:** Features a "Cold Boot" ADB taskkill protocol to prevent the command line from freezing when switching Android USB modes.
-* **Safety Circuit Breaker:** Automatically halts the sync if 5 consecutive transfers fail, preventing data corruption if the USB cable is bumped or disconnected.
-* **Self-Sanitizing:** Automatically cleans up legacy script backups on both devices to ensure your environment stays clean.
+* **Two-Way In-Memory Matrix:** Scans and compares local and mobile directories using .NET processing arrays. It executes directly in system memory, completely bypassing strict Windows PowerShell Execution Policies.
+* **The Deep Harvester:** Automatically sweeps loose files (Images, Videos, Documents) from your PC dropzone and your Phone's Camera Roll, and neatly organizes them into `YYYY-MM` date folders before syncing.
+* **Category Triage Routing:** Synchronizes files systematically by category (Images first, then Videos, then Documents) so you get immediate access to priority files.
+* **Workspace Architect:** Automatically builds a clean, hidden directory structure at the system root `C:\SyncDevice` and applies custom UI icons.
+* **The Ironclad Bridge:** Features a brute-force `netstat` and PID-hunting protocol to instantly resolve Port 5037 collisions with other background Android emulators.
+* **Safety Circuit Breaker:** Automatically halts the entire sync if 3 consecutive ADB transfers fail, preventing data corruption if the USB cable is bumped or disconnected.
+* **Watchdog Sentinel:** A continuous 10-second loop that automatically detects when your phone is plugged in, syncs, and goes back to sleep when unplugged.
 
 ---
 
@@ -28,11 +29,10 @@ SyncDevice is an ultra-fast, highly resilient, two-way synchronization engine bu
 1. Download the latest release or clone this repository.
 2. Extract the folder to your preferred location (the script will automatically anchor data to `C:\SyncDevice`).
 3. **Add your Icons (Recommended):** See the *Customizing Icons* section below.
-4. Double-click `SyncDevice.bat` to begin the first-run Handshake.
-5. The script will generate three desktop shortcuts:
-   * **SyncDevice AutoSync:** Manually trigger a two-way sync.
-   * **SyncDevice Folder:** Opens your `C:\SyncDevice` directory.
-   * **SyncDevice AutoWatcher:** Run this to have the PC automatically sync whenever the phone is plugged in.
+4. Double-click `SyncDevice.bat` to begin the Workspace Architect setup.
+5. The script will automatically clean up your desktop and generate two shortcuts:
+   * **SyncDevice:** Opens your `C:\SyncDevice` dropzone folder.
+   * **Start AutoSync Engine:** A manual trigger inside the folder to restart the daemon if closed.
 
 ---
 
