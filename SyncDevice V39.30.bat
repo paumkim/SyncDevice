@@ -10,7 +10,7 @@ for /F %%a in ('echo prompt $E ^| cmd') do set "ESC=%%a"
 
 :: ============================================================
 :: SyncDevice - SyncTwoWay
-:: - Version: 39.30 (Memory Optimized & CLI Stabilized)
+:: - Version: 39.30 (Memory Optimized + Windows 11 Patch)
 :: ============================================================
 
 set "CURRENT_VER=39.30"
@@ -161,15 +161,14 @@ echo      [CHECK] Environment Ready.
 echo.
 
 :: ---------------------------------------------------------
-:: STEP 3: PID HUNTER (Stable ADB Init)
+:: STEP 3: FAST ADB INIT (Memory Hotfix)
 :: ---------------------------------------------------------
 echo [3] Initializing Fresh ADB Bridge...
-adb kill-server >nul 2>&1
-for /f "tokens=5" %%A in ('netstat -aon ^| findstr /R /C:":5037 " 2^>nul') do (
-    taskkill /F /PID %%A /T >nul 2>nul
-)
-adb start-server >nul 2>&1
 
+:: Instantly wipe any stuck ghost ADB processes eating RAM
+taskkill /F /IM adb.exe /T >nul 2>&1
+
+:: The daemon will automatically and safely start on the next command
 goto :wait_device
 
 :wait_device
@@ -192,16 +191,15 @@ echo      [OK] Device detected and storage accessible.
 set "CIRCUIT_BREAKER=0"
 
 :: ---------------------------------------------------------
-:: STEP 4: THE DEEP HARVESTER (Memory Optimized)
+:: STEP 4: THE DEEP HARVESTER (Modern Windows Patch)
 :: ---------------------------------------------------------
 echo.
 echo ============================================================
 echo   [HARVESTER] Sweeping Loose Media into From_PC / From_Phone...
 echo ============================================================
 
-:: Memory Fix 1: Use native Windows command for Date instead of PowerShell
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set "dt=%%I"
-set "YM=!dt:~0,4!-!dt:~4,2!"
+:: Use reliable PowerShell to get the Date format (since wmic is removed in Windows 11)
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM'"`) do set "YM=%%I"
 
 adb shell "mkdir -p \"%PHONEFOLDER%/Image/From_Phone/!YM!\"" >nul 2>&1
 adb shell "mkdir -p \"%PHONEFOLDER%/Video/From_Phone/!YM!\"" >nul 2>&1
@@ -209,7 +207,7 @@ adb shell "mkdir -p \"%PHONEFOLDER%/Video/From_Phone/!YM!\"" >nul 2>&1
 adb shell "find /sdcard/DCIM/Camera -maxdepth 1 -type f \( -iname \*.jpg -o -iname \*.jpeg -o -iname \*.png \) -exec mv {} \"%PHONEFOLDER%/Image/From_Phone/!YM!/\" \;" >nul 2>&1
 adb shell "find /sdcard/DCIM/Camera -maxdepth 1 -type f \( -iname \*.mp4 -o -iname \*.mov \) -exec mv {} \"%PHONEFOLDER%/Video/From_Phone/!YM!/\" \;" >nul 2>&1
 
-:: Memory Fix 2: Only spin up PowerShell if there are actually loose files in the main folder
+:: Memory Fix: Only spin up the sorting script if there are actually loose files in the main folder
 set "HAS_LOOSE_FILES=0"
 for %%F in ("%PCFOLDER%\*.*") do set "HAS_LOOSE_FILES=1"
 
@@ -579,6 +577,6 @@ echo   [ 🛑 ABORT ] Safe Stop Requested!
 echo   Finishing current file, gracefully shutting down ADB...
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 del /q "%TEMPDIR%\stop.flag" >nul 2>&1
-adb kill-server >nul 2>&1
+taskkill /F /IM adb.exe /T >nul 2>&1
 timeout /t 3 >nul
 exit
