@@ -2,6 +2,12 @@
 
 All notable changes to the SyncDevice project will be documented in this file.
 
+## [v39.30] - Command Line Interface (CLI) Integration
+### Added
+* **Global CLI Wrapper:** Introduced a dedicated `syncdevice.bat` wrapper generated dynamically in `C:\SyncDevice\CLI`.
+* **Path Injection:** The engine now uses a safe PowerShell command on first run to silently add the CLI directory to the Windows User `%PATH%`, allowing global terminal access.
+* **CLI Routing Engine:** The main script now intercepts `push` and `pull` arguments, performing one-time isolated syncs and exiting cleanly without triggering the infinite Watchdog loop.
+
 ## [v39.20] - Safe Stop & UI Polish
 ### Added
 * **Safe Stop Mechanism:** Introduced a dedicated `Safe Stop AutoSync.lnk` generated dynamically in the `C:\SyncDevice` folder. Clicking this sets a `.flag` file that gracefully aborts the sync loop and safely kills the ADB server to prevent background port locking.
