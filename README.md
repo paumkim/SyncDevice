@@ -1,47 +1,30 @@
-# SyncDevice: Fast & Easy File Sync for PC and Android
+# SyncDevice — AutoSync Engine
 
-SyncDevice is a tool that makes copying files between your Windows PC and your Android phone fast and reliable. 
+AutoSync is a robust, automated two-way file synchronization engine designed to seamlessly mirror media and documents between your Windows PC and your Android device. It uses ADB (Android Debug Bridge) and native TAR streaming to transfer files rapidly and securely.
 
-If you've ever been frustrated by Windows freezing or crashing when you plug in your phone to transfer photos or music, this tool fixes that. It uses a secure developer connection (ADB) to bypass those common Windows bugs so your transfers actually finish.
+## 🚀 Key Features
 
-**⚠️ Good to know:** This was built and tested heavily on Samsung phones, but it will work perfectly on any Android device!
+* **Two-Way Watchdog Synchronization:** Continuously monitors your PC (`C:\SyncDevice`) and your Android phone (`/sdcard/Download/SyncDevice`). It calculates file sizes and intelligently pushes or pulls only what is missing or updated.
+* **The Deep Harvester:** Automatically sweeps loose camera media (DCIM) and sorts them into organized `Year-Month` folders.
+* **Universal TAR Streaming:** Bypasses standard file-by-file copying limits by streaming data through memory, resulting in blazing-fast transfers.
+* **Live UI:** Clean, self-overwriting console progress bars categorized by file type (Images, Videos, Documents, Misc).
+* **Graceful Shutdown:** Includes a "Safe Stop" mechanism to abort transfers without corrupting files or locking up background ports.
 
----
+## ⚙️ Prerequisites
 
-## ✨ What It Does
-* **Smart Syncing:** It quickly looks at your phone and your PC, figures out what files are missing, and copies only what is needed.
-* **Auto-Organizer:** It automatically grabs your messy, loose photos or documents and puts them into neat folders sorted by the year and month.
-* **Priority Transfer:** It makes sure your pictures are moved first, then your videos, and then your documents.
-* **Easy Setup:** Just run it once, and it will build a clean `C:\SyncDevice` folder on your computer with custom icons, ready to use.
-* **Fixes Bad Connections:** If another app on your computer is blocking your phone from connecting, SyncDevice forces the connection open automatically.
-* **Safe to Unplug:** If you accidentally pull the USB cable out while it's copying, it safely stops without breaking or corrupting your files.
-* **Background Watcher:** It can run quietly in the background. The moment you plug your phone in, it syncs your files and goes back to sleep.
+1.  **Windows PC** (Windows 10/11 recommended for native ANSI console support).
+2.  **Android Device** with **USB Debugging** enabled in Developer Options.
+3.  **ADB (Android Debug Bridge)** installed and added to your Windows system PATH.
 
----
+## 🛠️ Installation & Usage
 
-## 🛠️ What You Need First
-1. **Windows 10 or 11**.
-2. **ADB Installed:** You need to have Android Platform-Tools (ADB) installed on your computer.
-3. **USB Debugging:** You must turn on "Developer Options" and enable "USB Debugging" in your phone's settings.
+1.  Connect your Android device to your PC via USB. Ensure the connection is set to "File Transfer" (MTP) and allow USB Debugging if prompted on your phone screen.
+2.  Run the `SyncDevice.bat` script.
+3.  The engine will automatically architect its workspace at `C:\SyncDevice`, generate necessary desktop/folder icons, and start the Watchdog loop.
+4.  Drop files into the respective folders inside `C:\SyncDevice`, and they will automatically sync to your phone.
 
----
+## 🛑 How to Stop the Engine Safely
 
-## 🚀 How to Use It
-1. Download this project to your computer.
-2. Put your custom icons in the `ICO` folder (optional).
-3. Double-click `SyncDevice.bat`.
-4. The script will set everything up and put two shortcuts on your desktop:
-   * **SyncDevice:** Opens your main folder where you drop files you want to send to your phone.
-   * **Start AutoSync Engine:** Runs the sync tool manually whenever you want.
+**Do not close the console window using the "X" button.** Doing so will leave the ADB daemon running in the background, which can cause connection issues the next time you plug in your phone.
 
----
-
-## 📱 Troubleshooting (Samsung Users)
-If the black screen says **Android Storage is LOCKED** even after you tapped "Allow" on your phone:
-1. Make sure your phone's USB connection is set to **"File Transfer"**.
-2. If it still says locked, press **[B]** on your keyboard to force the script to skip the check and connect anyway.
-
----
-
-## 📄 License
-Free to use, share, and change (MIT License).
+Instead, go to your `C:\SyncDevice` folder and double-click the **Safe Stop AutoSync** shortcut. This sends a signal to the engine to finish the current file and gracefully shut down the ADB server.
