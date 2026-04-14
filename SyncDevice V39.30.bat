@@ -5,15 +5,15 @@ chcp 65001 >nul
 setlocal DisableDelayedExpansion
 setlocal EnableDelayedExpansion
 
-:: Create an ESC character for ANSI escape sequences (Perfect for modern Windows Terminal)
+:: Create an ESC character for ANSI escape sequences
 for /F %%a in ('echo prompt $E ^| cmd') do set "ESC=%%a"
 
 :: ============================================================
 :: SyncDevice - SyncTwoWay
-:: - Version: 39.20 (Per-category progress bars, Safe Abort added)
+:: - Version: 39.30 (Memory Optimized & CLI Stabilized)
 :: ============================================================
 
-set "CURRENT_VER=39.20"
+set "CURRENT_VER=39.30"
 title AutoSync v%CURRENT_VER%
 
 :: ---------------------------------------------------------
@@ -22,25 +22,92 @@ title AutoSync v%CURRENT_VER%
 set "PCFOLDER=C:\SyncDevice"
 set "ENGINE_DIR=%PCFOLDER%\autoSyncEngine"
 set "PHONEFOLDER=/sdcard/Download/SyncDevice"
+set "CLI_DIR=%PCFOLDER%\CLI"
 
 if /i not "%~dp0"=="%ENGINE_DIR%\" (
     echo [0] Architecting Clean Workspace...
     if not exist "%PCFOLDER%" mkdir "%PCFOLDER%"
     if not exist "%ENGINE_DIR%" mkdir "%ENGINE_DIR%"
+    if not exist "%CLI_DIR%" mkdir "%CLI_DIR%"
     
     if not exist "%ENGINE_DIR%\logs" mkdir "%ENGINE_DIR%\logs"
     if not exist "%ENGINE_DIR%\temp" mkdir "%ENGINE_DIR%\temp"
     if not exist "%ENGINE_DIR%\config" mkdir "%ENGINE_DIR%\config"
 
     if exist "%~dp0ICO" xcopy /E /I /Y "%~dp0ICO" "%ENGINE_DIR%\ICO\" >nul 2>&1
-    copy /Y "%~f0" "%ENGINE_DIR%\SyncDevice.bat" >nul
+    copy /Y "%~f0" "%ENGINE_DIR%\SyncDevice.bat" >nul 2>&1
     
     attrib +h +s "%ENGINE_DIR%" >nul 2>&1
     
-    echo      [+] Workspace Decluttered.
+    echo [0] Building CLI Interface safely...
+    :: Written line-by-line to prevent parenthesis parsing memory crashes
+    type nul > "%CLI_DIR%\syncdevice.bat"
+    >>"%CLI_DIR%\syncdevice.bat" echo @echo off
+    >>"%CLI_DIR%\syncdevice.bat" echo setlocal enabledelayedexpansion
+    >>"%CLI_DIR%\syncdevice.bat" echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo :: ================================
+    >>"%CLI_DIR%\syncdevice.bat" echo :: AUTO-INSTALL INTO USER PATH
+    >>"%CLI_DIR%\syncdevice.bat" echo :: ================================
+    >>"%CLI_DIR%\syncdevice.bat" echo set "TARGET=C:\SyncDevice\CLI"
+    >>"%CLI_DIR%\syncdevice.bat" echo echo %%PATH%% ^| find /I "%%TARGET%%" ^>nul
+    >>"%CLI_DIR%\syncdevice.bat" echo if %%errorlevel%%==0 goto continue_cli
+    >>"%CLI_DIR%\syncdevice.bat" echo echo Installing SyncDevice CLI...
+    >>"%CLI_DIR%\syncdevice.bat" echo powershell -NoProfile -Command "$p=[Environment]::GetEnvironmentVariable('PATH','User'); if($p -notmatch [regex]::Escape('C:\SyncDevice\CLI')){ [Environment]::SetEnvironmentVariable('PATH',$p+';C:\SyncDevice\CLI','User') }" ^>nul 2^>^&1
+    >>"%CLI_DIR%\syncdevice.bat" echo echo SyncDevice CLI installed. Please reopen CMD.
+    >>"%CLI_DIR%\syncdevice.bat" echo timeout /t 3 ^>nul
+    >>"%CLI_DIR%\syncdevice.bat" echo exit /b
+    >>"%CLI_DIR%\syncdevice.bat" echo :continue_cli
+    >>"%CLI_DIR%\syncdevice.bat" echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo :: ================================
+    >>"%CLI_DIR%\syncdevice.bat" echo :: CLI COMMAND PARSER
+    >>"%CLI_DIR%\syncdevice.bat" echo :: ================================
+    >>"%CLI_DIR%\syncdevice.bat" echo if /i "%%~1"=="" goto help
+    >>"%CLI_DIR%\syncdevice.bat" echo set "CMD=%%~1"
+    >>"%CLI_DIR%\syncdevice.bat" echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo if /i "%%CMD%%"=="-s" goto do_start
+    >>"%CLI_DIR%\syncdevice.bat" echo if /i "%%CMD%%"=="start" goto do_start
+    >>"%CLI_DIR%\syncdevice.bat" echo if /i "%%CMD%%"=="push"  goto do_push
+    >>"%CLI_DIR%\syncdevice.bat" echo if /i "%%CMD%%"=="pull"  goto do_pull
+    >>"%CLI_DIR%\syncdevice.bat" echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo echo [ERROR] Unknown command: %%CMD%%
+    >>"%CLI_DIR%\syncdevice.bat" echo goto help
+    >>"%CLI_DIR%\syncdevice.bat" echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo :do_start
+    >>"%CLI_DIR%\syncdevice.bat" echo echo [CLI] Starting AutoSync Engine...
+    >>"%CLI_DIR%\syncdevice.bat" echo start "" "%ENGINE_DIR%\SyncDevice.bat" --engine
+    >>"%CLI_DIR%\syncdevice.bat" echo exit /b
+    >>"%CLI_DIR%\syncdevice.bat" echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo :do_push
+    >>"%CLI_DIR%\syncdevice.bat" echo echo [CLI] Launching one-time Push...
+    >>"%CLI_DIR%\syncdevice.bat" echo call "%ENGINE_DIR%\SyncDevice.bat" push
+    >>"%CLI_DIR%\syncdevice.bat" echo exit /b
+    >>"%CLI_DIR%\syncdevice.bat" echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo :do_pull
+    >>"%CLI_DIR%\syncdevice.bat" echo echo [CLI] Launching one-time Pull...
+    >>"%CLI_DIR%\syncdevice.bat" echo call "%ENGINE_DIR%\SyncDevice.bat" pull
+    >>"%CLI_DIR%\syncdevice.bat" echo exit /b
+    >>"%CLI_DIR%\syncdevice.bat" echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo :help
+    >>"%CLI_DIR%\syncdevice.bat" echo echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    >>"%CLI_DIR%\syncdevice.bat" echo echo   SyncDevice Command Line Interface
+    >>"%CLI_DIR%\syncdevice.bat" echo echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    >>"%CLI_DIR%\syncdevice.bat" echo echo Usage: syncdevice [command]
+    >>"%CLI_DIR%\syncdevice.bat" echo echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo echo Commands:
+    >>"%CLI_DIR%\syncdevice.bat" echo echo   -s, start   Start the continuous background sync engine
+    >>"%CLI_DIR%\syncdevice.bat" echo echo   push        Run a one-time push ^(PC -^> Phone^)
+    >>"%CLI_DIR%\syncdevice.bat" echo echo   pull        Run a one-time pull ^(Phone -^> PC^)
+    >>"%CLI_DIR%\syncdevice.bat" echo echo.
+    >>"%CLI_DIR%\syncdevice.bat" echo exit /b
+
+    :: Safely add CLI_DIR to Windows User PATH
+    powershell -NoProfile -Command "$p=[Environment]::GetEnvironmentVariable('PATH','User'); if($p -notmatch [regex]::Escape('%CLI_DIR%')){ [Environment]::SetEnvironmentVariable('PATH',$p+';%CLI_DIR%','User') }" >nul 2>&1
+
+    echo      [+] Workspace Decluttered and CLI Installed.
     echo [0] Starting Engine...
     timeout /t 2 >nul
-    start "" "%ENGINE_DIR%\SyncDevice.bat"
+    start "" "%ENGINE_DIR%\SyncDevice.bat" --engine
     exit /b
 )
 
@@ -57,61 +124,27 @@ if not exist "%TEMPDIR%" (
 del /q "%CONFIGDIR%\SyncDevice_Master_v*.bat" >nul 2>&1
 copy /Y "%~f0" "%CONFIGDIR%\SyncDevice_Master_v%CURRENT_VER%.bat" >nul 2>&1
 
-goto :main
-
 :: ---------------------------------------------------------
-:: SUBROUTINES: SHORTCUTS & DYNAMIC ICONS
+:: CLI ROUTER (Checks for one-time arguments)
 :: ---------------------------------------------------------
-:setup_shortcuts
-echo [1] Updating Desktop and Folder Interfaces...
-for %%S in ("SyncDevice Folder" "SyncDevice AutoSync" "SyncDevice AutoWatcher" "Directory Explorer" "Safe Stop AutoSync") do (
-    if exist "%USERPROFILE%\Desktop\%%~S.lnk" del /f /q "%USERPROFILE%\Desktop\%%~S.lnk"
-)
+set "CLI_RUN_MODE="
+if /i "%~1"=="push" set "CLI_RUN_MODE=PUSH" & goto :engine_boot
+if /i "%~1"=="pull" set "CLI_RUN_MODE=PULL" & goto :engine_boot
+if /i "%~1"=="--engine" goto :engine_boot
+goto :engine_boot
 
-set "PS_LINK=$WshShell = New-Object -ComObject WScript.Shell; $iconPath = '%IconBank%\SyncDevice.ico'; if (-not (Test-Path $iconPath)) { $iconPath = '%IconBank%\icon.ico' }; $Sc = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\SyncDevice.lnk'); $Sc.TargetPath = '%PCFOLDER%'; if (Test-Path $iconPath) { $Sc.IconLocation = $iconPath + ',0' }; $Sc.Save();"
-powershell -NoProfile -Command "& { %PS_LINK% }" >nul 2>&1
-
-set "PS_MANUAL=$WshShell = New-Object -ComObject WScript.Shell; $iconPath = '%IconBank%\SyncDevice.ico'; if (-not (Test-Path $iconPath)) { $iconPath = '%IconBank%\icon.ico' }; $Sc2 = $WshShell.CreateShortcut('%PCFOLDER%\Start AutoSync Engine.lnk'); $Sc2.TargetPath = '%ENGINE_DIR%\SyncDevice.bat'; if (Test-Path $iconPath) { $Sc2.IconLocation = $iconPath + ',0' }; $Sc2.Save();"
-powershell -NoProfile -Command "& { %PS_MANUAL% }" >nul 2>&1
-
-:: Create the SAFE STOP shortcut ONLY inside the PC folder to keep the Desktop clean
-set "PS_STOP=$WshShell = New-Object -ComObject WScript.Shell; $Sc4 = $WshShell.CreateShortcut('%PCFOLDER%\Safe Stop AutoSync.lnk'); $Sc4.TargetPath = 'cmd.exe'; $Sc4.Arguments = '/c echo STOP > ""%TEMPDIR%\stop.flag""'; $Sc4.IconLocation = 'shell32.dll,27'; $Sc4.Save();"
-powershell -NoProfile -Command "& { %PS_STOP% }" >nul 2>&1
-goto :eof
-
-:dynamic_icons
-echo [2] Scanning ICO Library...
-set "categories="
-for %%F in ("%IconBank%\*.ico") do (
-    set "fname=%%~nF"
-    set "ignore=0"
-    if /i "!fname!"=="icon" set "ignore=1"
-    if /i "!fname!"=="SyncDevice" set "ignore=1"
-    
-    if "!ignore!"=="0" (
-        if not exist "%PCFOLDER%\!fname!" mkdir "%PCFOLDER%\!fname!"
-        set "ini=%PCFOLDER%\!fname!\desktop.ini"
-        attrib -s -h "!ini!" >nul 2>&1
-        (echo [.ShellClassInfo] 
-        echo IconResource=%%~fF,0) > "!ini!"
-        attrib +s +h "!ini!" & attrib +r "%PCFOLDER%\!fname!"
-        set "categories=!categories! !fname!"
-    )
-)
-ie4uinit.exe -show >nul 2>&1
-goto :eof
-
-:: ---------------------------------------------------------
-:: MAIN EXECUTION
-:: ---------------------------------------------------------
-:main
+:: =========================================================
+:: MAIN ENGINE LOGIC STARTS HERE
+:: =========================================================
+:engine_boot
 cls
-:: Clear any leftover stop flags from previous sessions
+:: Clear any leftover stop flags
 del /q "%TEMPDIR%\stop.flag" >nul 2>&1
 
 echo.
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo   SyncDevice — AutoSync v%CURRENT_VER%
+if defined CLI_RUN_MODE echo   Mode        : CLI One-Time %CLI_RUN_MODE%
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo   Engine Path : %ENGINE_DIR%
 echo   PC Folder   : %PCFOLDER%
@@ -120,24 +153,21 @@ echo ━━━━━━━━━━━━━━━━━━━━━━━━━
 echo.
 set "LOOP_COUNT=0"
 
-call :setup_shortcuts
-call :dynamic_icons
+if not defined CLI_RUN_MODE (
+    call :setup_shortcuts
+    call :dynamic_icons
+)
 echo      [CHECK] Environment Ready.
 echo.
+
 :: ---------------------------------------------------------
 :: STEP 3: PID HUNTER (Stable ADB Init)
 :: ---------------------------------------------------------
 echo [3] Initializing Fresh ADB Bridge...
-
-:: 1. Try graceful restart first
 adb kill-server >nul 2>&1
-
-:: 2. Clear port 5037 if something is stuck (best-effort)
 for /f "tokens=5" %%A in ('netstat -aon ^| findstr /R /C:":5037 " 2^>nul') do (
     taskkill /F /PID %%A /T >nul 2>nul
 )
-
-:: 3. Start ADB fresh
 adb start-server >nul 2>&1
 
 goto :wait_device
@@ -146,7 +176,6 @@ goto :wait_device
 echo      [WAIT] Waiting for device to become ready...
 adb wait-for-device
 
-:: Verify storage is accessible
 adb shell "ls /sdcard >/dev/null 2>&1"
 if errorlevel 1 (
     echo [ERROR] Storage Locked. Retrying...
@@ -155,6 +184,7 @@ if errorlevel 1 (
 )
 
 echo      [OK] Device detected and storage accessible.
+
 :: =========================================================
 :: 🔁 WATCHDOG LOOP STARTS HERE
 :: =========================================================
@@ -162,22 +192,31 @@ echo      [OK] Device detected and storage accessible.
 set "CIRCUIT_BREAKER=0"
 
 :: ---------------------------------------------------------
-:: STEP 4: THE DEEP HARVESTER
+:: STEP 4: THE DEEP HARVESTER (Memory Optimized)
 :: ---------------------------------------------------------
 echo.
 echo ============================================================
 echo   [HARVESTER] Sweeping Loose Media into From_PC / From_Phone...
 echo ============================================================
 
-for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM'"`) do set "YM=%%I"
+:: Memory Fix 1: Use native Windows command for Date instead of PowerShell
+for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set "dt=%%I"
+set "YM=!dt:~0,4!-!dt:~4,2!"
+
 adb shell "mkdir -p \"%PHONEFOLDER%/Image/From_Phone/!YM!\"" >nul 2>&1
 adb shell "mkdir -p \"%PHONEFOLDER%/Video/From_Phone/!YM!\"" >nul 2>&1
 
 adb shell "find /sdcard/DCIM/Camera -maxdepth 1 -type f \( -iname \*.jpg -o -iname \*.jpeg -o -iname \*.png \) -exec mv {} \"%PHONEFOLDER%/Image/From_Phone/!YM!/\" \;" >nul 2>&1
 adb shell "find /sdcard/DCIM/Camera -maxdepth 1 -type f \( -iname \*.mp4 -o -iname \*.mov \) -exec mv {} \"%PHONEFOLDER%/Video/From_Phone/!YM!/\" \;" >nul 2>&1
 
-set "PS_HARVEST=$p = '%PCFOLDER%'; $img = @('.jpg','.jpeg','.png','.gif','.bmp'); $vid = @('.mp4','.mov','.avi','.mkv'); $doc = @('.pdf','.docx','.txt','.xlsx','.csv'); Get-ChildItem -Path $p -Recurse -File | ForEach-Object { if ($_.FullName -match '\\autoSyncEngine\\' -or $_.FullName -match '\\From_PC\\') { return }; $ext = $_.Extension.ToLower(); $ym = $_.LastWriteTime.ToString('yyyy-MM'); if ($img -contains $ext) { $dest = \"$p\Image\From_PC\$ym\" } elseif ($vid -contains $ext) { $dest = \"$p\Video\From_PC\$ym\" } elseif ($doc -contains $ext) { $dest = \"$p\Document\From_PC\$ym\" } else { return }; if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Force -Path $dest | Out-Null }; Move-Item $_.FullName \"$dest\" -Force }"
-powershell -NoProfile -Command "& { %PS_HARVEST% }" >nul 2>&1
+:: Memory Fix 2: Only spin up PowerShell if there are actually loose files in the main folder
+set "HAS_LOOSE_FILES=0"
+for %%F in ("%PCFOLDER%\*.*") do set "HAS_LOOSE_FILES=1"
+
+if "!HAS_LOOSE_FILES!"=="1" (
+    set "PS_HARVEST=$p = '%PCFOLDER%'; $img = @('.jpg','.jpeg','.png','.gif','.bmp'); $vid = @('.mp4','.mov','.avi','.mkv'); $doc = @('.pdf','.docx','.txt','.xlsx','.csv'); Get-ChildItem -Path $p -File | ForEach-Object { $ext = $_.Extension.ToLower(); $ym = $_.LastWriteTime.ToString('yyyy-MM'); if ($img -contains $ext) { $dest = \"$p\Image\From_PC\$ym\" } elseif ($vid -contains $ext) { $dest = \"$p\Video\From_PC\$ym\" } elseif ($doc -contains $ext) { $dest = \"$p\Document\From_PC\$ym\" } else { return }; if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Force -Path $dest | Out-Null }; Move-Item $_.FullName \"$dest\" -Force }"
+    powershell -NoProfile -Command "& { !PS_HARVEST! }" >nul 2>&1
+)
 
 echo.
 echo ============================================================
@@ -194,7 +233,7 @@ adb shell "find \"%PHONEFOLDER%\" -type f -exec stat -c '%%s|%%n' {} +" 2>nul > 
 >> "%TEMPDIR%\engine.ps1" echo $pullL = [System.Collections.Generic.List[string]]::new(); $pullH = [System.Collections.Generic.List[string]]::new()
 >> "%TEMPDIR%\engine.ps1" echo try {
 >> "%TEMPDIR%\engine.ps1" echo   $files = [System.IO.Directory]::EnumerateFiles($pcDir, '*.*', [System.IO.SearchOption]::AllDirectories)
->> "%TEMPDIR%\engine.ps1" echo   foreach ($f in $files) { if ($f -notmatch 'autoSyncEngine') {
+>> "%TEMPDIR%\engine.ps1" echo   foreach ($f in $files) { if ($f -notmatch 'autoSyncEngine' -and $f -notmatch 'CLI') {
 >> "%TEMPDIR%\engine.ps1" echo       $fi = [System.IO.FileInfo]::new($f);
 >> "%TEMPDIR%\engine.ps1" echo       $rel = $f.Substring($pcLen).Replace('\', '/')
 >> "%TEMPDIR%\engine.ps1" echo       $pcData[$rel] = $fi.Length
@@ -202,7 +241,7 @@ adb shell "find \"%PHONEFOLDER%\" -type f -exec stat -c '%%s|%%n' {} +" 2>nul > 
 >> "%TEMPDIR%\engine.ps1" echo } catch {}
 >> "%TEMPDIR%\engine.ps1" echo $phRaw = [System.IO.File]::ReadAllLines($phRawF)
 >> "%TEMPDIR%\engine.ps1" echo $phPref = $phDir; if (-not $phPref.EndsWith('/')) { $phPref += '/' }
->> "%TEMPDIR%\engine.ps1" echo foreach ($l in $phRaw) { if ($l -notmatch '/\.' -and $l -notmatch 'autoSyncEngine') {
+>> "%TEMPDIR%\engine.ps1" echo foreach ($l in $phRaw) { if ($l -notmatch '/\.' -and $l -notmatch 'autoSyncEngine' -and $l -notmatch 'CLI') {
 >> "%TEMPDIR%\engine.ps1" echo     $p = $l.Split('^|', 2);
 >> "%TEMPDIR%\engine.ps1" echo     if ($p.Length -eq 2) {
 >> "%TEMPDIR%\engine.ps1" echo       $rel = $p[1]; if ($rel.StartsWith($phPref)) { $rel = $rel.Substring($phPref.Length) }
@@ -244,47 +283,50 @@ type nul > "%TEMPDIR%\all_pull.txt"
 if exist "%TEMPDIR%\pull_light.txt" type "%TEMPDIR%\pull_light.txt" >> "%TEMPDIR%\all_pull.txt"
 if exist "%TEMPDIR%\pull_heavy.txt" type "%TEMPDIR%\pull_heavy.txt" >> "%TEMPDIR%\all_pull.txt"
 
+:: ---------------------------------------------------------
+:: CLI MODE OVERRIDES
+:: ---------------------------------------------------------
+if "%CLI_RUN_MODE%"=="PUSH" type nul > "%TEMPDIR%\all_pull.txt"
+if "%CLI_RUN_MODE%"=="PULL" type nul > "%TEMPDIR%\all_push.txt"
+
 for /f %%A in ('type "%TEMPDIR%\all_push.txt" ^| find /c /v ""') do set "PUSH_COUNT=%%A"
 for /f %%A in ('type "%TEMPDIR%\all_pull.txt" ^| find /c /v ""') do set "PULL_COUNT=%%A"
 set /a TOTAL_TASKS=%PUSH_COUNT% + %PULL_COUNT%
 
 if %TOTAL_TASKS% EQU 0 (
+    if defined CLI_RUN_MODE (
+        echo  [ CLI ] Everything is up to date. Nothing to %CLI_RUN_MODE%.
+        timeout /t 3 >nul
+        exit /b
+    )
     goto :watchdog_sleep
 )
 
 echo  [ TASKS  ] Need to Push: %PUSH_COUNT% files ^| Need to Pull: %PULL_COUNT% files.
-echo  [ NOTICE ] To safely stop the sync at any time, run the "Safe Stop AutoSync" shortcut in %PCFOLDER%.
+if not defined CLI_RUN_MODE echo  [ NOTICE ] To safely stop the sync at any time, run the "Safe Stop AutoSync" shortcut in %PCFOLDER%.
 set /a CURRENT_TASK=0
 
 :: ---------------------------------------------------------
 :: CATEGORY COUNTS FOR PROGRESS BARS
 :: ---------------------------------------------------------
-:: IMAGES
 for /f %%C in ('findstr /i "^Image/" "%TEMPDIR%\all_push.txt" ^| find /c /v ""') do set "IMG_PUSH=%%C"
 for /f %%C in ('findstr /i "^Image/" "%TEMPDIR%\all_pull.txt" ^| find /c /v ""') do set "IMG_PULL=%%C"
 set /a IMG_TOTAL=%IMG_PUSH% + %IMG_PULL%
-if not defined IMG_TOTAL set "IMG_TOTAL=0"
 
-:: VIDEOS
 for /f %%C in ('findstr /i "^Video/" "%TEMPDIR%\all_push.txt" ^| find /c /v ""') do set "VID_PUSH=%%C"
 for /f %%C in ('findstr /i "^Video/" "%TEMPDIR%\all_pull.txt" ^| find /c /v ""') do set "VID_PULL=%%C"
 set /a VID_TOTAL=%VID_PUSH% + %VID_PULL%
-if not defined VID_TOTAL set "VID_TOTAL=0"
 
-:: DOCUMENTS
 for /f %%C in ('findstr /i "^Document/" "%TEMPDIR%\all_push.txt" ^| find /c /v ""') do set "DOC_PUSH=%%C"
 for /f %%C in ('findstr /i "^Document/" "%TEMPDIR%\all_pull.txt" ^| find /c /v ""') do set "DOC_PULL=%%C"
 set /a DOC_TOTAL=%DOC_PUSH% + %DOC_PULL%
-if not defined DOC_TOTAL set "DOC_TOTAL=0"
 
-:: MISC
 for /f %%C in ('findstr /i /v "^Image/ ^Video/ ^Document/" "%TEMPDIR%\all_push.txt" ^| find /c /v ""') do set "MISC_PUSH=%%C"
 for /f %%C in ('findstr /i /v "^Image/ ^Video/ ^Document/" "%TEMPDIR%\all_pull.txt" ^| find /c /v ""') do set "MISC_PULL=%%C"
 set /a MISC_TOTAL=%MISC_PUSH% + %MISC_PULL%
-if not defined MISC_TOTAL set "MISC_TOTAL=0"
 
 :: ---------------------------------------------------------
-:: 1. IMAGE SYNCHRONIZATION (WITH BAR)
+:: 1. IMAGE SYNCHRONIZATION
 :: ---------------------------------------------------------
 echo.
 echo [5] Synchronizing IMAGES...
@@ -304,14 +346,11 @@ if %IMG_TOTAL% GTR 0 (
         call :progress_bar_category !IMG_DONE! !IMG_TOTAL! IMAGES
         call :do_pull "%%A"
     )
-) else (
-    call :progress_bar_category 0 0 IMAGES
-)
-:: Lock in the line so the next category doesn't overwrite it
+) else ( call :progress_bar_category 0 0 IMAGES )
 echo.
 
 :: ---------------------------------------------------------
-:: 2. VIDEO SYNCHRONIZATION (WITH BAR)
+:: 2. VIDEO SYNCHRONIZATION
 :: ---------------------------------------------------------
 echo.
 echo [6] Synchronizing VIDEOS...
@@ -331,14 +370,11 @@ if %VID_TOTAL% GTR 0 (
         call :progress_bar_category !VID_DONE! !VID_TOTAL! VIDEOS
         call :do_pull "%%A"
     )
-) else (
-    call :progress_bar_category 0 0 VIDEOS
-)
-:: Lock in the line so the next category doesn't overwrite it
+) else ( call :progress_bar_category 0 0 VIDEOS )
 echo.
 
 :: ---------------------------------------------------------
-:: 3. DOCUMENT SYNCHRONIZATION (WITH BAR)
+:: 3. DOCUMENT SYNCHRONIZATION
 :: ---------------------------------------------------------
 echo.
 echo [7] Synchronizing DOCUMENTS...
@@ -358,14 +394,11 @@ if %DOC_TOTAL% GTR 0 (
         call :progress_bar_category !DOC_DONE! !DOC_TOTAL! DOCUMENTS
         call :do_pull "%%A"
     )
-) else (
-    call :progress_bar_category 0 0 DOCUMENTS
-)
-:: Lock in the line so the next category doesn't overwrite it
+) else ( call :progress_bar_category 0 0 DOCUMENTS )
 echo.
 
 :: ---------------------------------------------------------
-:: 4. MISC SYNCHRONIZATION (WITH BAR)
+:: 4. MISC SYNCHRONIZATION
 :: ---------------------------------------------------------
 echo.
 echo [8] Synchronizing OTHER FILES...
@@ -385,11 +418,19 @@ if %MISC_TOTAL% GTR 0 (
         call :progress_bar_category !MISC_DONE! !MISC_TOTAL! OTHER
         call :do_pull "%%A"
     )
-) else (
-    call :progress_bar_category 0 0 OTHER
-)
-:: Lock in the line so it is complete
+) else ( call :progress_bar_category 0 0 OTHER )
 echo.
+
+:: ---------------------------------------------------------
+:: CHECK FOR CLI MODE EXIT
+:: ---------------------------------------------------------
+if defined CLI_RUN_MODE (
+    echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    echo   [ CLI ] One-Time %CLI_RUN_MODE% Transfer Complete!
+    echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    timeout /t 3 >nul
+    exit /b
+)
 
 :watchdog_sleep
 if exist "%TEMPDIR%\stop.flag" goto :graceful_abort
@@ -407,17 +448,11 @@ if "!CIRCUIT_BREAKER!"=="1" (
 
     if %TOTAL_TASKS% GTR 0 (
         set "SLEEP_SECONDS=5"
+        set "IDLE_CYCLES=0"
     ) else (
         if not defined IDLE_CYCLES set "IDLE_CYCLES=0"
         set /a IDLE_CYCLES+=1
-
-        if %IDLE_CYCLES% LSS 10 (
-            set "SLEEP_SECONDS=10"
-        ) else if %IDLE_CYCLES% LSS 50 (
-            set "SLEEP_SECONDS=30"
-        ) else (
-            set "SLEEP_SECONDS=60"
-        )
+        if !IDLE_CYCLES! LSS 10 ( set "SLEEP_SECONDS=10" ) else if !IDLE_CYCLES! LSS 50 ( set "SLEEP_SECONDS=30" ) else ( set "SLEEP_SECONDS=60" )
     )
 )
 
@@ -450,23 +485,54 @@ if %LOOP_COUNT% GEQ 10000 (
 goto :watchdog_loop
 
 :: ---------------------------------------------------------
-:: TRANSFER SUBROUTINES (UNIVERSAL TAR STREAMING ENGINE)
+:: TRANSFER SUBROUTINES
 :: ---------------------------------------------------------
+:setup_shortcuts
+echo [1] Updating Desktop and Folder Interfaces...
+for %%S in ("SyncDevice Folder" "SyncDevice AutoSync" "SyncDevice AutoWatcher" "Directory Explorer" "Safe Stop AutoSync") do (
+    if exist "%USERPROFILE%\Desktop\%%~S.lnk" del /f /q "%USERPROFILE%\Desktop\%%~S.lnk"
+)
+set "PS_LINK=$WshShell = New-Object -ComObject WScript.Shell; $iconPath = '%IconBank%\SyncDevice.ico'; if (-not (Test-Path $iconPath)) { $iconPath = '%IconBank%\icon.ico' }; $Sc = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\SyncDevice.lnk'); $Sc.TargetPath = '%PCFOLDER%'; if (Test-Path $iconPath) { $Sc.IconLocation = $iconPath + ',0' }; $Sc.Save();"
+powershell -NoProfile -Command "& { %PS_LINK% }" >nul 2>&1
 
-:: CATEGORY PROGRESS BAR (ONE LINE, NO SCROLLING)
+set "PS_MANUAL=$WshShell = New-Object -ComObject WScript.Shell; $iconPath = '%IconBank%\SyncDevice.ico'; if (-not (Test-Path $iconPath)) { $iconPath = '%IconBank%\icon.ico' }; $Sc2 = $WshShell.CreateShortcut('%PCFOLDER%\Start AutoSync Engine.lnk'); $Sc2.TargetPath = '%ENGINE_DIR%\SyncDevice.bat'; if (Test-Path $iconPath) { $Sc2.IconLocation = $iconPath + ',0' }; $Sc2.Save();"
+powershell -NoProfile -Command "& { %PS_MANUAL% }" >nul 2>&1
+
+set "PS_STOP=$WshShell = New-Object -ComObject WScript.Shell; $Sc4 = $WshShell.CreateShortcut('%PCFOLDER%\Safe Stop AutoSync.lnk'); $Sc4.TargetPath = 'cmd.exe'; $Sc4.Arguments = '/c echo STOP > ""%TEMPDIR%\stop.flag""'; $Sc4.IconLocation = 'shell32.dll,27'; $Sc4.Save();"
+powershell -NoProfile -Command "& { %PS_STOP% }" >nul 2>&1
+goto :eof
+
+:dynamic_icons
+echo [2] Scanning ICO Library...
+set "categories="
+for %%F in ("%IconBank%\*.ico") do (
+    set "fname=%%~nF"
+    set "ignore=0"
+    if /i "!fname!"=="icon" set "ignore=1"
+    if /i "!fname!"=="SyncDevice" set "ignore=1"
+    if "!ignore!"=="0" (
+        if not exist "%PCFOLDER%\!fname!" mkdir "%PCFOLDER%\!fname!"
+        set "ini=%PCFOLDER%\!fname!\desktop.ini"
+        attrib -s -h "!ini!" >nul 2>&1
+        (echo [.ShellClassInfo] 
+        echo IconResource=%%~fF,0) > "!ini!"
+        attrib +s +h "!ini!" & attrib +r "%PCFOLDER%\!fname!"
+        set "categories=!categories! !fname!"
+    )
+)
+ie4uinit.exe -show >nul 2>&1
+goto :eof
+
 :progress_bar_category
 setlocal EnableDelayedExpansion
 set "cur=%~1"
 set "max=%~2"
 set "label=%~3"
-
-:: Pad the label to 9 characters so the brackets and bars align perfectly
 set "pad=         "
 set "label=!label!!pad!"
 set "label=!label:~0,9!"
 
 if "%max%"=="0" (
-    rem Show full bar for empty/skipped categories
     set "bar=-------------------------"
     <nul set /p="!ESC![1G!ESC![2K[!label!] !bar! 100%%   "
     endlocal
@@ -475,27 +541,20 @@ if "%max%"=="0" (
 
 set /a perc=(cur*100)/max
 if !perc! GTR 100 set perc=100
-
 set /a bars=perc/4
 
 set "bar="
-:: Draw filled parts
 for /L %%A in (1,1,!bars!) do set "bar=!bar!#"
-
-:: Draw empty parts (ensures total width is exactly 25 characters)
 set /a empty=25-bars
 if !empty! GTR 0 (
     for /L %%A in (1,1,!empty!) do set "bar=!bar!-"
 )
 
-:: Use ANSI Escape codes to return to column 1 (!ESC![1G) and clear the line (!ESC![2K)
 <nul set /p="!ESC![1G!ESC![2K[!label!] !bar! !perc!%%   "
-
 endlocal
 goto :eof
 
 :do_push
-rem --- UNIVERSAL TAR PUSH (PC → PHONE) ---
 set "rel=%~1"
 set "win_rel=!rel:/=\!"
 set "pc_path=%PCFOLDER%\!win_rel!"
@@ -506,7 +565,6 @@ tar -cf - "!pc_path!" 2>nul | adb exec-in "tar -xf - -C \"%PHONEFOLDER%\"" 2>nul
 goto :eof
 
 :do_pull
-rem --- UNIVERSAL TAR PULL (PHONE → PC) ---
 set "rel=%~1"
 set "win_rel=!rel:/=\!"
 set "pc_path=%PCFOLDER%\!win_rel!"
@@ -514,9 +572,6 @@ for %%F in ("!pc_path!") do if not exist "%%~dpF" mkdir "%%~dpF"
 adb exec-out "tar -cf - -C \"%PHONEFOLDER%\" \"!rel!\"" 2>nul | tar -xf - -C "%PCFOLDER%" 2>nul
 goto :eof
 
-:: ---------------------------------------------------------
-:: SAFE SHUTDOWN SEQUENCE
-:: ---------------------------------------------------------
 :graceful_abort
 echo.
 echo !ESC![1G!ESC![2K━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
